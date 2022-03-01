@@ -1,0 +1,75 @@
+<Q1 FOR TOP ARTISTS OF EACH Genre>
+SELECT s.artist_name,
+       s.genre_type,
+       MAX(total_purchase)
+FROM
+  (SELECT AR.Name artist_name,
+          G.Name genre_type,
+          SUM(IL.Quantity)*IL.UnitPrice total_purchase
+   FROM Track T
+   JOIN Album AL ON AL.AlbumId=T.AlbumId
+   JOIN Artist AR ON AR.ArtistId=AL.ArtistId
+   JOIN InvoiceLine IL ON IL.TrackId=T.TrackId
+   JOIN Genre G ON T.GenreId=G.GenreId
+   GROUP BY 1)s
+GROUP BY 2
+ORDER BY 3 DESC
+
+
+
+
+<Q2 TOP 10 purchased customers with their countries>
+SELECT t3.first_name,
+       t3.last_name,
+       t3.Country,
+       t3.Purchase
+FROM
+  (SELECT t1.Country,
+          MAX(t1.Purchase) Purchase
+   FROM
+     (SELECT C.FirstName first_name,
+             C.LastName last_name,
+             C.Country Country,
+             SUM(I.total) Purchase
+      FROM Customer C
+      JOIN Invoice I ON I.CustomerId=C.CustomerId
+      GROUP BY 1,
+               2,
+               3)t1
+   GROUP BY 1) t2
+JOIN
+  (SELECT C.FirstName first_name,
+          C.LastName last_name,
+          C.Country Country,
+          SUM(I.total) Purchase
+   FROM Customer C
+   JOIN Invoice I ON I.CustomerId=C.CustomerId
+   GROUP BY 1,
+            2,
+            3)t3 ON t3.Country= t2.Country
+AND t3.Purchase=t2.Purchase
+GROUP BY 3
+ORDER BY 4 DESC
+LIMIT 10
+
+Q3 <Jazz Listeners>
+SELECT G.Name,
+       I.BillingCity,
+       SUM(I.TOTAL) total
+FROM GENRE G
+JOIN Track T ON T.GenreId=G.GenreId
+JOIN InvoiceLine IL ON IL.TrackId=T.TrackId
+JOIN Invoice I ON I.InvoiceId=IL.InvoiceId
+WHERE G.Name='Jazz'
+GROUP BY 2
+ORDER BY 3 DESC
+
+Q4 <Top 10 albums purchased>
+SELECT AL.Title,
+       SUM(IL.Quantity)*IL.UnitPrice purchase
+FROM Track T
+JOIN Album AL ON AL.AlbumId=T.AlbumId
+JOIN InvoiceLine IL ON IL.TrackId=T.TrackId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
