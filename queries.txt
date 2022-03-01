@@ -1,8 +1,5 @@
 <Q1 FOR TOP ARTISTS OF EACH Genre>
-SELECT s.artist_name,
-       s.genre_type,
-       MAX(total_purchase)
-FROM
+WITH t1 AS
   (SELECT AR.Name artist_name,
           G.Name genre_type,
           SUM(IL.Quantity)*IL.UnitPrice total_purchase
@@ -11,11 +8,23 @@ FROM
    JOIN Artist AR ON AR.ArtistId=AL.ArtistId
    JOIN InvoiceLine IL ON IL.TrackId=T.TrackId
    JOIN Genre G ON T.GenreId=G.GenreId
-   GROUP BY 1)s
-GROUP BY 2
-ORDER BY 3 DESC
-
-
+   GROUP BY AR.Name,
+            G.Name
+   ORDER BY total_purchase DESC),
+     t2 AS
+  (SELECT t1.genre_type,
+          Max(t1.total_purchase) total_purchase
+   FROM t1
+   GROUP BY t1.genre_type
+   ORDER BY total_purchase DESC)
+SELECT t1.artist_name,
+       t1.genre_type,
+       t1.total_purchase
+FROM t1
+JOIN t2 ON t1.genre_type=t2.genre_type
+AND t1.total_purchase=t2.total_purchase
+GROUP BY t1.genre_type
+ORDER BY t1.total_purchase DESC
 
 
 <Q2 TOP 10 purchased customers with their countries>
